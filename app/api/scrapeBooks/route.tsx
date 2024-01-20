@@ -265,7 +265,16 @@ function getReaderType(searchGenre: string, readerTypeArr: ReaderTypesObj): stri
             const array = readerTypeArr[key];
 
             if (array.includes(searchGenre)) {
-                return key;
+            
+                if (key == "MindExpander"){
+                    return "Mind-Expander";
+                } else if (key == "FunLover"){
+                    return "Fun-Lover";
+                } else if (key == "NailBiter"){
+                    return "Nail-Biter";
+                } else {
+                    return key;
+                }
             }
         }
     }
