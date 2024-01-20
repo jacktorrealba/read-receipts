@@ -156,7 +156,7 @@ export default function InputProfile(){
           <Box className="result" id="result" display='none' >
 
             <Box textAlign='right' pr='5rem'>
-              <Text fontSize='49px'>{pageInfo.username}'s Read Receipt</Text>
+              <Text fontSize='49px'>{pageInfo.username}`&apos`s Read Receipt</Text>
               <Text mt='-0.5rem' fontSize='30px'>{currentDate}</Text>
             </Box>
 
