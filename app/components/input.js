@@ -156,7 +156,7 @@ export default function InputProfile(){
           <Box className="result" id="result" display='none' >
 
             <Box textAlign='right' pr='5rem'>
-              <Text fontSize='49px'>{pageInfo.username}`&apos`s Read Receipt</Text>
+              <Text fontSize='49px'>{pageInfo.username}&apos;s Read Receipt</Text>
               <Text mt='-0.5rem' fontSize='30px'>{currentDate}</Text>
             </Box>
 
@@ -192,6 +192,10 @@ export default function InputProfile(){
             
             <Center mt='2rem'>
               <Text lineHeight='1' width='80%' textAlign='center' fontSize='35px'>{pageInfo.secondDesc}</Text>
+            </Center>
+
+            <Center className="url" fontSize='25px' mt='8rem'>
+              <Text>read-receipts.com</Text>
             </Center>
 
           </Box>

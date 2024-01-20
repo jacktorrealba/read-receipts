@@ -11,7 +11,6 @@
 *::after,
 *::before {
   box-sizing: border-box;
-  font-family: 'Noto Serif', serif;
 }
 
 * {
