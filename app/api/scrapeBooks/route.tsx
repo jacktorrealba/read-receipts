@@ -92,6 +92,8 @@ interface ReaderTypesObj {
     [key: string]: string[]
 }
 
+
+
 // function for getting the genres that match the whitelist
 async function getBookGenres(titleUrl: string): Promise<string[]> {
 
@@ -158,17 +160,15 @@ async function getBooksPerPage(username: string, page: number): Promise<Book[]> 
         // format into ISO (yyyy-MM-dd)
         const stringLast12Months = last12Months.toISOString().split('T')[0]
         
-
         // get the elements that hold the book review information
         const elements = $('.bookalike.review')
         
         // check if elements exist
         if (elements.length > 0) {
 
-            try {
-
-                await Promise.all(elements.map(async (index, element) => {
-                    
+            const booksFromPage = await Promise.all(
+                elements.map(async (index, element) => {
+                
                     // get the date that the book was read from the page
                     const dateRead = $(element).find('.date_read_value').first().text().trim()
 
@@ -182,39 +182,31 @@ async function getBooksPerPage(username: string, page: number): Promise<Book[]> 
                         const formattedDateReadObj = dateReadObject.toISOString().split('T')[0]
         
                         // check if the book is read within the last 12 months
-                        if (formattedDateReadObj >= stringLast12Months)
-                        {
+                        if (formattedDateReadObj >= stringLast12Months){
                             
                             const titleUrl = $(element).find('.title').find('a').attr('href')
-                            const bookGenre = await getBookGenres(titleUrl as string)
+                            const bookGenre = await getBookGenres(titleUrl as string);
         
-                            const book: Book = {
+                            return {
                                 title: $(element).find('.title').find('.value').text().trim(),
                                 userRating: $(element).find('.rating').find('.value').text().trim(),
                                 bookTotalRating: $(element).find('.num_ratings').find('.value').text().trim(),
                                 bookAvgRating: $(element).find('.avg_rating').find('.value').text().trim(),
                                 genres: bookGenre
-                            }
-                            
-                            books.push(book)
+                            };
                         }
                     }
-                }));
-
-            } catch (error) {
-
-                //console.error('Error in Promise.all:', error);
-                throw error;
-            }
-            
-            return books;
-        } 
-
-        //console.log('No books found on the page');
+                    return null;
+                })
+            );
+            const filteredBooks = booksFromPage.filter(book => book !== null) as Book[];
+            return filteredBooks;
+        }
+        
         return [];
 
     } catch (error) {
-        throw(error)
+        throw error;
     }
 }
 
@@ -329,41 +321,18 @@ async function getUserInfo(username: string): Promise<string>  {
 // get the description based on the reader type
 function getTypeDesc(type: string): string {
 
-    let typeDescription: string = ""
+    const typeDescriptions: { [key: string]: string} = {
+        'Aesthete': "Your eye for greatness extends beyond the written word. You can find beautiful prose in anything creative, and can see things differently than those around you.",
+        'Protagonist': "You have a unique ability to imagine yourself in the shoes of the main character. You love to use that ability to explore different worlds and dream about amazing things.",
+        'Romantic': "You know how to show those around you how much you love them. You take the beauty of the relationships you read and put that into your own relationships, making them stronger.",
+        'Fun-Lover': "You know that books aren't only meant to make you cry - they can also be insight into how to make life better and more enjoyable. You have a talent for bringing the beauty of written word and fun together.",
+        'Nail-Biter': "Just because something is done with written word doesn't mean it is always spelled out for you. You have a unique mind for deciphering and discovering things that others inherently don't or can't.",
+        'Logophile': "You have a love for words unlike anyone else. You value prose so much in your reading habits, and it can heavily skew your opinion on a book overall, and it's why people trust your reading opinions most.",
+        'Mind-Expander': "Everything you touch gets better, and that is learned through the words you read on the page. You love discovering new things and gaining insight into worlds unknown before.",
+    };
 
-    if (type == "Aesthete") 
-    {
-        typeDescription = "Your eye for greatness extends beyond the written word. You can find beautiful prose in anything creative, and can see things differently than those around you."
-
-    } else if (type == "Protagonist") {
-
-        typeDescription = "You have a unique ability to imagine yourself in the shoes of the main character. You love to use that ability to explore different worlds and dream about amazing things."
-
-    } else if (type == "Romantic") {
-
-        typeDescription = "You know how to show those around you how much you love them. You take the beauty of the relationships you read and put that into your own relationships, making them stronger."
-
-    } else if (type == "FunLover") {
-
-        typeDescription = "You know that books aren\'t only meant to make you cry - they can also be insight into how to make life better and more enjoyable. You have a talent for bringing the beauty of written word and fun together."
-
-    } else if (type == "NailBiter") {
-
-        typeDescription = "Just because something is done with written word doesn\'t mean it is always spelled out for you. You have a unique mind for deciphering and discovering things that others inherently don\'t or can\'t."
-
-    } else if (type == "Logophile") {
-
-        typeDescription = "You have a love for words unlike anyone else. You value prose so much in your reading habits, and it can heavily skew your opinion on a book overall, and it's why people trust your reading opinions most."
-
-    } else if (type == "MindExpander") {
-
-        typeDescription = "Everything you touch gets better, and that is learned through the words you read on the page. You love discovering new things and gaining insight into worlds unknown before."
-
-    } else {
-        typeDescription = ""
-    }
-
-    return typeDescription
+    // Return the description if it exists, otherwise an empty string
+    return typeDescriptions[type] || "";
 
 }
 
