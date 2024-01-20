@@ -1,4 +1,4 @@
-import {Center, Box, Text, Code, ChakraProvider} from '@chakra-ui/react'
+import {Center, Box, Text, ChakraProvider} from '@chakra-ui/react'
 import theme from './theme';
 
 export default function TitleMessage(){
