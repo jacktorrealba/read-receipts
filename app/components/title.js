@@ -1,4 +1,4 @@
-import { Box, Heading } from "@chakra-ui/react"
+import { Box, Heading , Text} from "@chakra-ui/react"
 
 export default function Title(){
   
@@ -6,12 +6,12 @@ export default function Title(){
     <>
     
       <Box id="titleBox" display='flex' alignItems='center' justifyContent='center'   mt='10rem'>
-        <Heading className="title" >
+        <Text className="title" >
           Read
-        </Heading>
-        <Heading ml='1rem' className="title" >
+        </Text>
+        <Text ml='1rem' className="title" >
           Receipts
-        </Heading>
+        </Text>
       </Box>
 
     </>

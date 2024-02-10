@@ -1,10 +1,14 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif:wght@300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Karla:wght@300;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Baskervville&display=swap');
 
 :root {
   --green: rgb(79, 121, 66);
   --off-white: rgb(250, 249, 246);
   --yellow: #ffcd34;
+  --text-font-family: 'Karla', sans-serif;
+  --heading-font-family: 'Baskervville', serif;
 }
 
 *,
@@ -17,8 +21,6 @@
   box-sizing: border-box;
   padding: 0;
   margin: 0;
-  font-family: 'Noto Serif', serif !important;
-  font-weight: 300;
 }
 
 html {
@@ -43,14 +45,24 @@ body {
 }
 
 .title {
-  font-family: 'Noto Serif', serif !important;
   color: var(--yellow);
   font-size: 90px !important;
+  text-transform: lowercase;
   font-weight: 300 !important;
+  font-family: var(--heading-font-family) !important;
 }
 
 .homeText {
   font-size: 20px;
+  font-family: var(--text-font-family) !important;
+  font-weight: 300;
+  text-transform: lowercase;
+}
+
+.homeTextLink {
+  font-family: var(--text-font-family) !important;
+  font-weight: 300;
+  text-transform: lowercase;
 }
 
 .result {
@@ -67,7 +79,6 @@ body {
 #submitBtn:hover {
   color: black;
 }
-
 
 @media screen and (width <= 600px) {
 

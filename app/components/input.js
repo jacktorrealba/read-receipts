@@ -132,6 +132,7 @@ export default function InputProfile(){
               _placeholder={{color: 'offWhite'}}
               bg='customBlue'
               border='none'
+              fontFamily='Karla, sans-serif'
             /> 
           </Box> 
 
@@ -153,7 +154,7 @@ export default function InputProfile(){
 
         {pageInfo ? (
 
-          <Box className="result" id="result" display='none' >
+          <Box fontFamily='Noto Serif, serif' className="result" id="result" display='none' >
 
             <Box textAlign='right' pr='5rem'>
               <Text fontSize='49px'>{pageInfo.username}&apos;s Read Receipt</Text>
@@ -195,7 +196,7 @@ export default function InputProfile(){
             </Center>
 
             <Center className="url" fontSize='25px' mt='8rem'>
-              <Text>read-receipts.com</Text>
+              <Text >read-receipts.com</Text>
             </Center>
 
           </Box>
