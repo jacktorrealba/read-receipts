@@ -1,5 +1,5 @@
 Read Receipts  
-https://www.read-receipts.com 
+https://read-receipts-six.vercel.app/
 
 ## What is Read-Receipts?
 
