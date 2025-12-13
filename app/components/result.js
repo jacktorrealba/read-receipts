@@ -5,7 +5,7 @@ import Link from "next/link"
 export default function ResultPage() {
     return (
         <>
-        <ChakraProvider>
+
             <Box className="result" id="result" display='none' >
 
                 <Box textAlign='right' pr='5rem'>
@@ -48,7 +48,7 @@ export default function ResultPage() {
                 </Center>
 
             </Box>
-        </ChakraProvider>
+
         </>
     )
 }

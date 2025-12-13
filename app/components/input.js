@@ -1,10 +1,12 @@
 import { ArrowForwardIcon } from "@chakra-ui/icons"
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Center, Box, Input, Button, ChakraProvider, Text, FormControl, FormErrorMessage } from "@chakra-ui/react";
+import { Center, Box, RadioCard, Input, Button, Field, Text, FormControl, Heading, FormLabel, RadioGroup, HStack,Radio, FormErrorMessage, Container } from "@chakra-ui/react";
 import theme from './theme';
 import { CircularProgress } from "@chakra-ui/react";
 import html2canvas from "html2canvas";
+
+
 
 export default function InputProfile(){
 
@@ -14,6 +16,21 @@ export default function InputProfile(){
   const [loading, setLoading] = useState(false)
   const [currentDate, setCurrentDate] = useState('')
   const [showButton, setShowButton] = useState(false)
+
+  // define colors for background and text
+  const backgroundColors = [
+    {  value: "#B4C8FF" },
+    {  value: "#F6E594" },
+    {  value: "#BDDC7E" },
+    {  value: "#F7CBB9" },
+  ]
+
+  const fontColors = [
+    { value : "#f25596"},
+    { value : "#7e4b58"},
+    { value : "#3c4526"},
+    { value : "#3a6f73"},
+  ]
 
   // get the profile link from the input
   const handleInputChange = (e) => {
@@ -116,13 +133,42 @@ export default function InputProfile(){
     }
   };
 
+  
     
   return (
     <>
-      <ChakraProvider theme={theme}>
-  
+      
+        <Box w="50%" mx="auto" mt="2rem">
+          <Field.Root required>
+            <Field.Label>
+              Your Name <Field.RequiredIndicator />
+            </Field.Label>
+            <Input />
+          </Field.Root>
+          <RadioCard.Root  my="1rem">
+            <RadioCard.Label>Pick a background color</RadioCard.Label>
+            <HStack align="stretch">
+              {backgroundColors.map((item) => (
+                <RadioCard.Item key={item.value} value={item.value} background={item.value} h="40px">
+                  <RadioCard.ItemHiddenInput />
+                  <RadioCard.ItemControl/>
+                </RadioCard.Item>
+              ))}
+            </HStack>
+          </RadioCard.Root>
+          <RadioCard.Root  my="1rem">
+            <RadioCard.Label>Pick a font color</RadioCard.Label>
+            <HStack align="stretch">
+              {fontColors.map((item) => (
+                <RadioCard.Item key={item.value} value={item.value} background={item.value} h="40px">
+                  <RadioCard.ItemHiddenInput />
+                  <RadioCard.ItemControl/>
+                </RadioCard.Item>
+              ))}
+            </HStack>
+          </RadioCard.Root>
+        </Box>
         <Box id='inputBox' display='flex' justifyContent='center' alignItems='center' mt='3rem'>
-
           <Box className="inputBox" width='50%'>
             <Input
               id="submitInput"
@@ -135,14 +181,13 @@ export default function InputProfile(){
               fontFamily='Karla, sans-serif'
             /> 
           </Box> 
-
           <Box className="btnBox" pl='1rem'>
             <Button id="submitBtn" onClick={handleSubmit} bg='customBlue' color='offWhite' isDisabled={!isUrlValid()}> 
               <ArrowForwardIcon/> 
             </Button>
           </Box>
-          
         </Box>
+        
           
         <Center id="loadingIconBox" mt='2rem'>
           {loading ? <CircularProgress isIndeterminate color="customYellow"></CircularProgress>: null}
@@ -204,8 +249,7 @@ export default function InputProfile(){
           <Box></Box>
         )}
         
-      </ChakraProvider>
-    
+      
     </>
   
   )

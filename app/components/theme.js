@@ -1,12 +1,16 @@
-import { extendTheme } from "@chakra-ui/react";
+import { createSystem, defaultConfig, defineConfig } from "@chakra-ui/react";
 
-const theme = extendTheme({
-    colors: {
-        offWhite: '#FAF9F6',
-        customGreen: '#4F7942',
-        customYellow: '#FFCD34',
-        customBlue: '#9EB2E8'
+const config = defineConfig({
+    theme: {
+        tokens: {
+            colors: {
+                offWhite: {value: "#FAF9F6"},
+                customGreen: {value: "#4F7942"},
+                customYellow: {value: "#FFCD34"},
+                customBlue: {value: "#9EB2E8"},
+            },
+        },
     },
 })
 
-export default theme;
+export default createSystem(defaultConfig, config)
