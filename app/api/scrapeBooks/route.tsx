@@ -1,6 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { NextRequest, NextResponse } from 'next/server';
+import { MdOutlineTextRotationAngleup } from 'react-icons/md';
 
 
 // define Book object
@@ -10,7 +11,14 @@ interface Book {
     userRating?: string,
     bookTotalRating: string,
     bookAvgRating?: string,
+    author: string,
     genres: string[]
+}
+
+interface TopAuthors {
+    [key: string]: any,
+    author: string,
+    countOfAuthorRead: number
 }
 
 // define GenreCount object
@@ -20,7 +28,7 @@ interface GenreCount {
 }
 
 // define the resulting object to pass to the view
-interface ResultInfo {
+ interface ResultInfo {
     username: string,
     totalBooks: number,
     firstWord: string,
@@ -92,7 +100,35 @@ interface ReaderTypesObj {
     [key: string]: string[]
 }
 
+function checkForDupes(authorToSearch: string, arrayOfAuthors: TopAuthors[]) {
+    // loop through each of authors in the TopAuthors array
+    for (let index = 0; index < arrayOfAuthors.length; index++) {
 
+        // get the current iteration obj
+        const element = arrayOfAuthors[index];
+
+        // if the author we are searching for exists in the current obj, append the count, and move to the next obj
+        if (element.author == authorToSearch) {
+            element.countOfAuthorRead += 1
+            continue;
+        }
+    }
+}
+
+async function getTopAuthors(books: Book[]): Promise<TopAuthors[]> {
+    const topAuthors: TopAuthors[] = [];
+    books.forEach((bookInfo) => {
+        const foundDupe = topAuthors.find(obj => obj.author == bookInfo.author);
+        if (foundDupe != undefined) {
+            foundDupe.countOfAuthorRead += 1
+        } else {
+            topAuthors.push({author: bookInfo.author, countOfAuthorRead: 1})
+        }
+    })
+    console.log(topAuthors)
+    return topAuthors;
+    // throw new Error("Logic error, this will never be reached.");
+}
 
 // function for getting the genres that match the whitelist
 async function getBookGenres(titleUrl: string): Promise<string[]> {
@@ -192,6 +228,7 @@ async function getBooksPerPage(username: string, page: number): Promise<Book[]> 
                                 userRating: $(element).find('.rating').find('.value').text().trim(),
                                 bookTotalRating: $(element).find('.num_ratings').find('.value').text().trim(),
                                 bookAvgRating: $(element).find('.avg_rating').find('.value').text().trim(),
+                                author: $(element).find('.author').find('a').text().trim(),
                                 genres: bookGenre
                             };
                         }
@@ -351,7 +388,7 @@ export async function GET(request: NextRequest) {
         let totalBooks: Book[] = [] // will hold all the books found per page
         let currentPage = 1 // set the current page to 1
         let hasMoreBooks = true; // by default set to true
-
+        var topAuthorsRead: TopAuthors[] = [];
         while (hasMoreBooks){
             
             // make the call for getting the books on the current page, accepting a username and page number
@@ -366,6 +403,8 @@ export async function GET(request: NextRequest) {
                 currentPage++
             }
         }
+        // return top authors
+        const topAuthorsRead = await getTopAuthors(totalBooks)
 
         // return total read books for the user
         const topGenre = await getTopGenre(totalBooks)
@@ -378,6 +417,8 @@ export async function GET(request: NextRequest) {
 
         // return the average ratings of books the user read in the last year
         const avgRatingForUser = getAvgRatings(totalBooks)
+
+        
 
         // get the first word 
         let firstWordType: string = ""

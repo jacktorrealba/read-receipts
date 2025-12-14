@@ -1,6 +1,6 @@
 'use client'
-import { ChakraProvider, Center, Box, Text } from "@chakra-ui/react"
-import Link from "next/link"
+import { Center, Box, Text } from "@chakra-ui/react"
+
 
 export default function ResultPage() {
     return (
