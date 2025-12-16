@@ -1,7 +1,9 @@
+import { BreadcrumbLink } from '@chakra-ui/react';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { NextRequest, NextResponse } from 'next/server';
 import { MdOutlineTextRotationAngleup } from 'react-icons/md';
+import { VscDebugContinueSmall } from 'react-icons/vsc';
 
 
 // define Book object
@@ -18,7 +20,8 @@ interface Book {
 interface TopAuthors {
     [key: string]: any,
     author: string,
-    countOfAuthorRead: number
+    countOfAuthorRead: number,
+    totalAuthorRating: number
 }
 
 // define GenreCount object
@@ -100,34 +103,88 @@ interface ReaderTypesObj {
     [key: string]: string[]
 }
 
-function checkForDupes(authorToSearch: string, arrayOfAuthors: TopAuthors[]) {
-    // loop through each of authors in the TopAuthors array
-    for (let index = 0; index < arrayOfAuthors.length; index++) {
+async function getMaxPage(username: string): Promise<number> {
+    const firstPage = `https://www.goodreads.com/review/list/${username}?page=1&shelf=read`
+    try {
+        const response = await axios.get(firstPage);
+        const $ = cheerio.load(response.data);
 
-        // get the current iteration obj
-        const element = arrayOfAuthors[index];
+        // get the element that stores the pagination numbers
+        const paginationElement = $('#reviewPagination')
 
-        // if the author we are searching for exists in the current obj, append the count, and move to the next obj
-        if (element.author == authorToSearch) {
-            element.countOfAuthorRead += 1
-            continue;
-        }
+       // get the last element
+       const lastPaginationElem = $(paginationElement).find('a').last();
+
+       // from the last element, get the prev as it will be the last page 
+       const lastPage: number = +lastPaginationElem.prev().text()
+        
+       return lastPage
+        
+    } catch (error) {
+        throw error
     }
+    
 }
 
-async function getTopAuthors(books: Book[]): Promise<TopAuthors[]> {
-    const topAuthors: TopAuthors[] = [];
+// function for translating user rating
+function getUserRatingAsNum(stringRating: string) {
+
+    interface RatingDict {
+        [key: string]: number,
+
+    }
+    const ratingMap: RatingDict = {
+        "it was amazing" : 5,
+        "really liked it" : 4,
+        "liked it" : 3,
+        "it was ok" : 2,
+        "did not like it" : 1
+    } 
+
+    // if no rating provide -> default 09
+    if (stringRating == '') {
+        return 0;
+    }
+
+    return ratingMap[stringRating];
+}
+
+ function getTopAuthors(books: Book[]) {
+    // initialize new array to hold the author info read by the user
+    let authorsReadArray: TopAuthors[] = [];
+
+    // loop through each book read by the user
     books.forEach((bookInfo) => {
-        const foundDupe = topAuthors.find(obj => obj.author == bookInfo.author);
+
+        // get the string rating back as a number 0-5
+        let rating = getUserRatingAsNum(bookInfo.userRating ? bookInfo.userRating : "")
+        
+        // look for duplicate authors
+        const foundDupe = authorsReadArray.find(obj => obj.author == bookInfo.author);
+
+        // if a dupe was found...
         if (foundDupe != undefined) {
+
+            // increment the count
             foundDupe.countOfAuthorRead += 1
+
+            // if there was a rating provide, then increment the rating -> to be used later in sorting
+            if (bookInfo.userRating != undefined) {
+                foundDupe.totalAuthorRating += rating
+            }
         } else {
-            topAuthors.push({author: bookInfo.author, countOfAuthorRead: 1})
+            // if no dupe is found, just push the item into the array
+            authorsReadArray.push({author: bookInfo.author, countOfAuthorRead: 1, totalAuthorRating: rating})
         }
     })
-    console.log(topAuthors)
-    return topAuthors;
-    // throw new Error("Logic error, this will never be reached.");
+
+    // sort the array desc by count of read and then by rating
+    authorsReadArray = authorsReadArray.slice().sort((a, b) => b.countOfAuthorRead - a.countOfAuthorRead || b.totalAuthorRating - a.totalAuthorRating)
+
+    // get top 3 from sorted array
+    const top3Authors = authorsReadArray.slice(0, 3)
+
+    return top3Authors; 
 }
 
 // function for getting the genres that match the whitelist
@@ -181,12 +238,12 @@ function isValidDateString(dateString: string): boolean {
 async function getBooksPerPage(username: string, page: number): Promise<Book[]> {
 
     const readBooksURL = `https://www.goodreads.com/review/list/${username}?page=${page}&shelf=read`
-    
+    let books: Book[] = [];
+
     try {
         const response = await axios.get(readBooksURL);
         const $ = cheerio.load(response.data);
-        const books: Book[] = [];
-
+        
         // get today's date
         const last12Months = new Date()
 
@@ -197,50 +254,69 @@ async function getBooksPerPage(username: string, page: number): Promise<Book[]> 
         const stringLast12Months = last12Months.toISOString().split('T')[0]
         
         // get the elements that hold the book review information
-        const elements = $('.bookalike.review')
-        
-        // check if elements exist
-        if (elements.length > 0) {
+        const elements  = $('.bookalike.review')
 
-            const booksFromPage = await Promise.all(
-                elements.map(async (index, element) => {
+            
+            for (let j = 0; j < elements.length; j++) {
                 
-                    // get the date that the book was read from the page
-                    const dateRead = $(element).find('.date_read_value').first().text().trim()
-
+                const multipleReads = $(elements[j]).find('.field.date_read').find('.date_read_value').length
+                //console.log($(elements[j]).find('.field.date_read').find('.date_read_value').text())
+                if (multipleReads > 1) {
+                    const multipleElems = $(elements[j]).find('.field.date_read').find('.date_read_value')
+                    for (let i = 0; i < multipleElems.length; i ++) {
+                        const elementDate = $(multipleElems[i]).text().trim()
+                        if (isValidDateString(elementDate)) {
+                            const dateReadObject = new Date(elementDate)
+                            const formattedDateReadObj = dateReadObject.toISOString().split('T')[0]
+                            if (formattedDateReadObj >= stringLast12Months) {
+                                const titleUrl = $(elements[j]).find('.title').find('a').attr('href')
+                                const bookGenre = await getBookGenres(titleUrl as string);
+                                const book : Book = {
+                                    title: $(elements[j]).find('.title').find('.value').text().trim(),
+                                    userRating: $(elements[j]).find('.rating').find('.value').text().trim(),
+                                    bookTotalRating: $(elements[j]).find('.num_ratings').find('.value').text().trim(),
+                                    bookAvgRating: $(elements[j]).find('.avg_rating').find('.value').text().trim(),
+                                    author: $(elements[j]).find('.author').find('a').text().trim(),
+                                    genres: bookGenre
+                                }
+                                books.push(book)
+                            }
+                        }
+                    } 
+                } else {
+                    const dateRead = $(elements[j]).find('.field.date_read').find('.date_read_value').text().trim()
                     // check if we have 
-                    if (isValidDateString(dateRead)){
-
+                    if (isValidDateString(dateRead)) {
+                        
                         // convert to date object
                         const dateReadObject = new Date(dateRead)
     
                         // format into ISO
                         const formattedDateReadObj = dateReadObject.toISOString().split('T')[0]
-        
+                        
+                        const referenceDate = new Date(stringLast12Months)
+                        const bookReadDate = new Date(formattedDateReadObj)
+
                         // check if the book is read within the last 12 months
-                        if (formattedDateReadObj >= stringLast12Months){
+                        if (bookReadDate > referenceDate) {
                             
-                            const titleUrl = $(element).find('.title').find('a').attr('href')
+                            const titleUrl = $(elements[j]).find('.title').find('a').attr('href')
                             const bookGenre = await getBookGenres(titleUrl as string);
-        
-                            return {
-                                title: $(element).find('.title').find('.value').text().trim(),
-                                userRating: $(element).find('.rating').find('.value').text().trim(),
-                                bookTotalRating: $(element).find('.num_ratings').find('.value').text().trim(),
-                                bookAvgRating: $(element).find('.avg_rating').find('.value').text().trim(),
-                                author: $(element).find('.author').find('a').text().trim(),
+                            
+                            const book : Book = {
+                                title: $(elements[j]).find('.title').find('.value').text().trim(),
+                                userRating: $(elements[j]).find('.rating').find('.value').text().trim(),
+                                bookTotalRating: $(elements[j]).find('.num_ratings').find('.value').text().trim(),
+                                bookAvgRating: $(elements[j]).find('.avg_rating').find('.value').text().trim(),
+                                author: $(elements[j]).find('.author').find('a').text().trim(),
                                 genres: bookGenre
-                            };
+                            }
+                            books.push(book)
                         }
                     }
-                    return null;
-                })
-            );
-            const filteredBooks = booksFromPage.filter(book => book !== null) as Book[];
-            return filteredBooks;
-        }
-        
-        return [];
+                }
+            }
+        return books
 
     } catch (error) {
         throw error;
@@ -324,7 +400,7 @@ function getAvgRatings(books: Book[]): number {
 
 // function to get the user's profile name
 async function getUserInfo(username: string): Promise<string>  {
-
+    
     // define the url for the profile
     const userUrl = `https://www.goodreads.com/user/show/${username}`
 
@@ -383,28 +459,31 @@ export async function GET(request: NextRequest) {
 
         // get the user's profile name
         const userInfo = await getUserInfo(username as string);
+        
+        // get the max page of read books
+        const maxPage = await getMaxPage(username as string)
 
         // initialize variables and arrays
         let totalBooks: Book[] = [] // will hold all the books found per page
-        let currentPage = 1 // set the current page to 1
-        let hasMoreBooks = true; // by default set to true
-        var topAuthorsRead: TopAuthors[] = [];
-        while (hasMoreBooks){
-            
+        //let currentPage = 1 // set the current page to 1
+
+        for (let i = 1; i <= maxPage; i ++) {
             // make the call for getting the books on the current page, accepting a username and page number
-            const booksFromPage = await getBooksPerPage(username as string, currentPage)
-            
+            const booksFromPage = await getBooksPerPage(username as string, i)
+
             // if there are no more books found on the page, stop the loop by setting hasMoreBooks to false
             // otherwise, concat the books to the totalBooks array
-            if (booksFromPage.length === 0){
-                hasMoreBooks = false
+            if (booksFromPage.length == 0){
+
             } else {
                 totalBooks = totalBooks.concat(booksFromPage)
-                currentPage++
             }
         }
+
+
         // return top authors
-        const topAuthorsRead = await getTopAuthors(totalBooks)
+        const topAuthorsRead = getTopAuthors(totalBooks)
+        
 
         // return total read books for the user
         const topGenre = await getTopGenre(totalBooks)
@@ -417,8 +496,6 @@ export async function GET(request: NextRequest) {
 
         // return the average ratings of books the user read in the last year
         const avgRatingForUser = getAvgRatings(totalBooks)
-
-        
 
         // get the first word 
         let firstWordType: string = ""

@@ -43,8 +43,11 @@ export default function InputProfile() {
 
   // validate the url that the user inputted
   const isUrlValid = () => {
-    const urlRegex = /^https:\/\/www\.goodreads\.com\/user\/show\/\d+$/;
+    //const urlRegex = /^https:\/\/www\.goodreads\.com\/user\/show\/\d+$/;
+    const urlRegex = /^https:\/\/www\.goodreads\.com\/user\/show\/.+$/;
+    
     return urlRegex.test(profileLink);
+
   };
 
 
@@ -66,14 +69,16 @@ export default function InputProfile() {
     setShowSubmitButton(false)
     setShowButton(false) // hide the download png result button
 
-    // initialize username string
-    let username = ''
+    // // initialize username string
+    // let username = ''
 
     // check for if the IsUrlValid function returned true to run api call
     if (isUrlValid){
+
       // get the user id from the valid url
-      username = profileLink.match(/\/user\/show\/([^/]+)/)[1];
-      
+      //const username = profileLink.match([/\/user\/show\/([^/]+)/])[1];
+      const username = profileLink.match(/(?!.*\/).+/)[0]
+  
       try {
         // start api call 
         const response = await axios.get('/api/scrapeBooks', {
@@ -93,10 +98,11 @@ export default function InputProfile() {
   
       } catch (error) {
         alert('Error fetching your data. Please try again.')
-        console.log("Something went wrong", error);
+        //console.log("Something went wrong", error);
         setLoading(false);
       }
     } 
+    
   }
 
   const handleDownloadImage = () => {
