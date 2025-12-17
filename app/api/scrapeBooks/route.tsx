@@ -244,31 +244,42 @@ async function getBooksPerPage(username: string, page: number): Promise<Book[]> 
         const response = await axios.get(readBooksURL);
         const $ = cheerio.load(response.data);
         
-        // get today's date
-        const last12Months = new Date()
-
         // from today's date, look back 12 months
-        last12Months.setMonth(last12Months.getMonth() - 12)
+        const today = new Date()
+        today.setMonth(new Date().getMonth() - 12) // change the month
+        const last12MonthsDate = today
 
         // format into ISO (yyyy-MM-dd)
-        const stringLast12Months = last12Months.toISOString().split('T')[0]
+        //const stringLast12Months = last12MonthsDate.toISOString().split('T')[0]
         
         // get the elements that hold the book review information
         const elements  = $('.bookalike.review')
 
-            
+            // loop through each book found on the page
             for (let j = 0; j < elements.length; j++) {
                 
+                // check if there are multiple dates within the "read" field -> indicates the user read the book more than once
                 const multipleReads = $(elements[j]).find('.field.date_read').find('.date_read_value').length
-                //console.log($(elements[j]).find('.field.date_read').find('.date_read_value').text())
+                
+                // if there are multiple reads
                 if (multipleReads > 1) {
+                    
+                    // get the elements that hold the dates
                     const multipleElems = $(elements[j]).find('.field.date_read').find('.date_read_value')
+
+                    // loop through each of those elements
                     for (let i = 0; i < multipleElems.length; i ++) {
-                        const elementDate = $(multipleElems[i]).text().trim()
-                        if (isValidDateString(elementDate)) {
-                            const dateReadObject = new Date(elementDate)
-                            const formattedDateReadObj = dateReadObject.toISOString().split('T')[0]
-                            if (formattedDateReadObj >= stringLast12Months) {
+
+                        // get the date value
+                        const stringDateRead = $(multipleElems[i]).text().trim()
+
+                        // call function to check if it's a valid date
+                        if (isValidDateString(stringDateRead)) {
+
+                            // convert string date to date type
+                            const dateRead = new Date(stringDateRead)
+
+                            if (dateRead > last12MonthsDate) {
                                 const titleUrl = $(elements[j]).find('.title').find('a').attr('href')
                                 const bookGenre = await getBookGenres(titleUrl as string);
                                 const book : Book = {
@@ -284,21 +295,18 @@ async function getBooksPerPage(username: string, page: number): Promise<Book[]> 
                         }
                     } 
                 } else {
-                    const dateRead = $(elements[j]).find('.field.date_read').find('.date_read_value').text().trim()
+                    const stringDateRead = $(elements[j]).find('.field.date_read').find('.date_read_value').text().trim()
                     // check if we have 
-                    if (isValidDateString(dateRead)) {
+                    if (isValidDateString(stringDateRead)) {
                         
                         // convert to date object
-                        const dateReadObject = new Date(dateRead)
-    
-                        // format into ISO
-                        const formattedDateReadObj = dateReadObject.toISOString().split('T')[0]
+                        const dateRead = new Date(stringDateRead)
                         
-                        const referenceDate = new Date(stringLast12Months)
-                        const bookReadDate = new Date(formattedDateReadObj)
+                        //const referenceDate = new Date(stringLast12Months)
+                        //const bookReadDate = new Date(formattedDateReadObj)
 
                         // check if the book is read within the last 12 months
-                        if (bookReadDate > referenceDate) {
+                        if (dateRead > last12MonthsDate) {
                             
                             const titleUrl = $(elements[j]).find('.title').find('a').attr('href')
                             const bookGenre = await getBookGenres(titleUrl as string);
