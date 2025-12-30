@@ -316,7 +316,7 @@ async function getBooksPerPage(username: string, page: number): Promise<Book[]> 
                             // convert string date to date type
                             const dateRead = new Date(stringDateRead)
 
-                            if (dateRead > last12MonthsDate) {
+                            if (dateRead.getFullYear() == 2025) {
                                 const titleUrl = $(elements[j]).find('.title').find('a').attr('href')
                                 const bookGenre = await getBookGenres(titleUrl as string);
                                 const book : Book = {
@@ -344,7 +344,8 @@ async function getBooksPerPage(username: string, page: number): Promise<Book[]> 
                         //const bookReadDate = new Date(formattedDateReadObj)
 
                         // check if the book is read within the last 12 months
-                        if (dateRead > last12MonthsDate) {
+                        // update: getting all books within the 2025
+                        if (dateRead.getFullYear() == 2025) {
                             
                             const titleUrl = $(elements[j]).find('.title').find('a').attr('href')
                             const bookGenre = await getBookGenres(titleUrl as string);
