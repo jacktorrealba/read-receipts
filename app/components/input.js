@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Center, Box, RadioCard, Span, Input, Button, Field, Text, HStack, FieldHelperText } from "@chakra-ui/react";
 import { ProgressCircle } from "@chakra-ui/react";
 import html2canvas from "html2canvas";
-import Result from '../result/page';
+import Result from './updatedResult';
 
 
   // define colors for background and text

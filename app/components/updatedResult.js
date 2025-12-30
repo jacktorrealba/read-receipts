@@ -130,7 +130,7 @@ export default function Result({resultInfo}) {
                         <Heading style={styleResultCategory}>
                             BOOKS READ: <Span color={resultInfo.fontColor} fontFamily="Livvic" fontSize="64px">{resultInfo.totalBooks}</Span>
                         </Heading>
-                        <Heading textAlign="end" fontSize="42px" color={resultInfo.fontColor} mr="4rem" fontFamily="Livvic" fontWeight="bold">readreceipts.vercel.app</Heading>
+                        <Heading textAlign="end" fontSize="42px" color={resultInfo.fontColor} mr="4rem" fontFamily="Livvic" fontWeight="bold">yourreadreceipt.vercel.app</Heading>
                     </Flex>
                 </Box>
                 {/* <Box width="100%" mx="auto" mt="4rem" mb="0.5rem">
