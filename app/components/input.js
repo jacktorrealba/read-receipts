@@ -36,7 +36,14 @@ export default function InputProfile() {
   const [showButton, setShowButton] = useState(false)
   const [showSubmitButton, setShowSubmitButton] = useState(true);
 
-  
+  useEffect(() => {
+    const currentDateObj = new Date();
+    const day = currentDateObj.getDate();
+    const month = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(currentDateObj);
+    const year = currentDateObj.getFullYear();
+    const formattedDate = `${day} ${month} ${year}`
+    setCurrentDate(formattedDate)
+  },[])
 
   // get the profile link from the input
   const handleInputChange = (e) => {
@@ -75,23 +82,10 @@ export default function InputProfile() {
   }
 
 
-  useEffect(() => {
-    const currentDateObj = new Date();
-    const day = currentDateObj.getDate();
-    const month = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(currentDateObj);
-    const year = currentDateObj.getFullYear();
-    const formattedDate = `${day} ${month} ${year}`
-    setCurrentDate(formattedDate)
-
-    const controller =  new AbortController()
-    
-    getReadReceipt().catch((error) => {
-      return () => {
-        controller.abort()
-      }
-    })
-    
-  }, [])
+  // useEffect(() => {
+  //   const controller =  new AbortController()
+  //   getReadReceipt()
+  // })
 
   async function getReadReceipt() {
 
@@ -113,6 +107,7 @@ export default function InputProfile() {
         
         // populate the result png template with data
         setPageInfo(response.data)
+        //console.log("response data: ", pageInfo)
         
         // show the button to download png result
         setShowButton(true)
@@ -120,6 +115,9 @@ export default function InputProfile() {
       } catch (error) {
         alert(error)
         setLoading(false);
+        return () => {
+          controller.abort()
+        }
       }
   }
 

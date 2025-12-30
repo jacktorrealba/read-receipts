@@ -220,7 +220,7 @@ function getTopBooks(books: Book[]) {
 async function getBookGenres(titleUrl: string): Promise<string[]> {
 
     // set up the url
-    const bookUrl = `https://www.goodreads.com/${titleUrl}`
+    const bookUrl = `https://www.goodreads.com${titleUrl}`
 
     try {
 
@@ -549,7 +549,7 @@ export async function GET(request: NextRequest) {
         // get the count of books the user read over the past year
         const totalYTDBooks = totalBooks.length
 
-        console.log(totalBooks)
+        //console.log(totalBooks)
 
         // return the user's type based on their most popular genre
         //const userType = getReaderType(topGenre, readerTypes)
@@ -592,11 +592,11 @@ export async function GET(request: NextRequest) {
             // firstDesc: firstWordDesc,
             // secondDesc: secondWordDesc
         }
-
+        //console.log("resultInfo: ", resultInfo)
         return NextResponse.json(resultInfo)
 
     } catch (error) {
-        
+        //console.log(error)
         return NextResponse.json(error)
         
     }

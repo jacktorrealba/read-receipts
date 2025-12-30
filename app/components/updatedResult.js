@@ -3,7 +3,7 @@ import { Box, Heading, Span, Text, Flex } from "@chakra-ui/react"
 
 
 export default function Result({resultInfo}) {
-
+    //console.log("resultinfo: ", resultInfo)
     // mapping the hex to string color
     const backgroundColorMap = {
         BDDC7E: "green.jpeg",
