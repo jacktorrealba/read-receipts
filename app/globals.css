@@ -72,6 +72,38 @@ body {
   color: black;
 }
 
+.result-template {
+  height: 1920px;
+  width: 1080px;
+}
+
+.result-title {
+  font-family: "Livvic", sans-serif;
+  line-height: 100%;
+  margin: 0 4rem 0 0;
+  font-weight: bolder;
+  padding: 10px;
+  text-align: end;
+}
+
+.result-category {
+  font-family: "Livvic", sans-serif;
+  font-size: 27px;
+  font-weight: bold;
+  padding: 10px;
+  text-align: start;
+  margin: 0 0 0 4rem;
+}
+
+.results-list {
+  font-family: "Livvic", sans-serif;
+  font-size: 40px;
+  font-weight: bold;
+  padding: 10px;
+  text-align: start;
+  margin: 0 0 6rem 4rem;
+}
+
 #submitInput:focus::placeholder {
   color: transparent;
 }

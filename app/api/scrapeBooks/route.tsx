@@ -9,12 +9,20 @@ import { VscDebugContinueSmall } from 'react-icons/vsc';
 // define Book object
 interface Book {
     username?: string,
-    title?: string;
-    userRating?: string,
+    title: string;
+    userRating: number,
     bookTotalRating: string,
     bookAvgRating?: string,
     author: string,
-    genres: string[]
+    genres: string[],
+    alreadyRead: boolean
+}
+
+
+interface TopGenres {
+    [key: string]: any,
+    genreName: string,
+    count: number
 }
 
 interface TopAuthors {
@@ -25,21 +33,27 @@ interface TopAuthors {
 }
 
 // define GenreCount object
-interface GenreCount {
-    name: string;
-    count: number;
-}
+// interface GenreCount {
+//     name: string;
+//     count: number;
+// }
 
 // define the resulting object to pass to the view
  interface ResultInfo {
     username: string,
     totalBooks: number,
-    firstWord: string,
-    secondWord?: string,
-    avgRatings: number,
-    topGenreRead: string,
-    firstDesc: string,
-    secondDesc: string
+    topBooks: string[],
+    topAuthors: string[],
+    topGenres: string[],
+    displayName: string,
+    fontColor: string,
+    background: string
+    // firstWord: string,
+    // secondWord?: string,
+    // avgRatings: number,
+    // topGenreRead: string,
+    // firstDesc: string,
+    // secondDesc: string
 }
 
 // define genres we care about
@@ -51,12 +65,13 @@ const whitelistGenres = [
     "Manga",
     "Graphic Novel",
     "Romance",
+    "Romantasy",
     "Chick Lit",
     "Christian",
     "Religion",
     "Spirituality",
     "Contemporary",
-    "Literary",
+    "Literary Fiction",
     "Classics",
     "Queer",
     "Historical Fiction",
@@ -73,7 +88,6 @@ const whitelistGenres = [
     "Fantasy",
     "Children",
     "Young Adult",
-    "YA",
     "Humor",
     "Comedy",
     "Crime",
@@ -84,19 +98,23 @@ const whitelistGenres = [
     "Suspense",
     "Feminism",
     "Mental Health",
-    "Dystopia"
+    "Dystopia",
+    "Gothic",
+    "Plays",
 ]
 
+
+
 // define the different reader types and their related genres
-const readerTypes = {
-    Aesthete: ["Art", "Music", "Poetry", "Comic", "Manga", "Graphic Novel"],
-    Romantic: ["Romance", "Chick Lit"],
-    Logophile: ["Contemporary", "Literary", "Classics"],
-    MindExpander: ["Queer", "Historical Fiction", "History", "Nonfiction", "Philosophy", "Psychology", "Science", "Sci-Fi", "Self Help", "LGBT", "Feminism" ,"Mental Health", "Christian", "Religion", "Spirituality"],
-    Protagonist: ["Biography", "Memoir", "Fantasy" ,"Dystopia"],
-    FunLover: ["Children", "YA", "Young Adult", "Sports", "Humor", "Comedy"],
-    NailBiter: ["Crime", "Horror", "Thriller", "Mystery", "Paranormal", "Suspense"]
-}
+// const readerTypes = {
+//     Aesthete: ["Art", "Music", "Poetry", "Comic", "Manga", "Graphic Novel"],
+//     Romantic: ["Romance", "Chick Lit"],
+//     Logophile: ["Contemporary", "Literary", "Classics"],
+//     MindExpander: ["Queer", "Historical Fiction", "History", "Nonfiction", "Philosophy", "Psychology", "Science", "Sci-Fi", "Self Help", "LGBT", "Feminism" ,"Mental Health", "Christian", "Religion", "Spirituality"],
+//     Protagonist: ["Biography", "Memoir", "Fantasy" ,"Dystopia"],
+//     FunLover: ["Children", "YA", "Young Adult", "Sports", "Humor", "Comedy"],
+//     NailBiter: ["Crime", "Horror", "Thriller", "Mystery", "Paranormal", "Suspense"]
+// }
 
 // define reader type object
 interface ReaderTypesObj {
@@ -149,6 +167,17 @@ function getUserRatingAsNum(stringRating: string) {
     return ratingMap[stringRating];
 }
 
+
+
+function getTopBooks(books: Book[]) {
+
+    // filter out re-reads, sort desc by userRating, and return the top 5 elements
+    const topBooksArray = books.filter((book) => book.alreadyRead == false).sort((a,b) => b.userRating  - a.userRating).slice(0,5)
+
+    return topBooksArray
+
+}
+
  function getTopAuthors(books: Book[]) {
     // initialize new array to hold the author info read by the user
     let authorsReadArray: TopAuthors[] = [];
@@ -157,7 +186,7 @@ function getUserRatingAsNum(stringRating: string) {
     books.forEach((bookInfo) => {
 
         // get the string rating back as a number 0-5
-        let rating = getUserRatingAsNum(bookInfo.userRating ? bookInfo.userRating : "")
+        //let rating = getUserRatingAsNum(bookInfo.userRating ? bookInfo.userRating : "")
         
         // look for duplicate authors
         const foundDupe = authorsReadArray.find(obj => obj.author == bookInfo.author);
@@ -170,11 +199,11 @@ function getUserRatingAsNum(stringRating: string) {
 
             // if there was a rating provide, then increment the rating -> to be used later in sorting
             if (bookInfo.userRating != undefined) {
-                foundDupe.totalAuthorRating += rating
+                foundDupe.totalAuthorRating += bookInfo.userRating
             }
         } else {
             // if no dupe is found, just push the item into the array
-            authorsReadArray.push({author: bookInfo.author, countOfAuthorRead: 1, totalAuthorRating: rating})
+            authorsReadArray.push({author: bookInfo.author, countOfAuthorRead: 1, totalAuthorRating: bookInfo.userRating ? bookInfo.userRating: 0})
         }
     })
 
@@ -208,8 +237,9 @@ async function getBookGenres(titleUrl: string): Promise<string[]> {
         // loop through and get the genre
         genreList.each((index, genre) => {
 
+            
             const genreText = $(genre).text().trim()
-
+            
             // check if the genre exists in our whitelist
             const goodGenre = whitelistGenres.includes(genreText)
 
@@ -219,6 +249,7 @@ async function getBookGenres(titleUrl: string): Promise<string[]> {
                 genres.push(genreText)
 
             } 
+            //genres.push(genreText)
         });
 
         return genres
@@ -260,10 +291,16 @@ async function getBooksPerPage(username: string, page: number): Promise<Book[]> 
                 
                 // check if there are multiple dates within the "read" field -> indicates the user read the book more than once
                 const multipleReads = $(elements[j]).find('.field.date_read').find('.date_read_value').length
+
+                const userRating = $(elements[j]).find('.rating').find('.value').text().trim()
+                // convert user rating into a number
+                const userRatingNum = getUserRatingAsNum(userRating ? userRating : "")
                 
                 // if there are multiple reads
                 if (multipleReads > 1) {
                     
+                    const alreadyRead = true
+
                     // get the elements that hold the dates
                     const multipleElems = $(elements[j]).find('.field.date_read').find('.date_read_value')
 
@@ -284,11 +321,12 @@ async function getBooksPerPage(username: string, page: number): Promise<Book[]> 
                                 const bookGenre = await getBookGenres(titleUrl as string);
                                 const book : Book = {
                                     title: $(elements[j]).find('.title').find('.value').text().trim(),
-                                    userRating: $(elements[j]).find('.rating').find('.value').text().trim(),
+                                    userRating: userRatingNum,
                                     bookTotalRating: $(elements[j]).find('.num_ratings').find('.value').text().trim(),
                                     bookAvgRating: $(elements[j]).find('.avg_rating').find('.value').text().trim(),
                                     author: $(elements[j]).find('.author').find('a').text().trim(),
-                                    genres: bookGenre
+                                    genres: bookGenre,
+                                    alreadyRead: alreadyRead
                                 }
                                 books.push(book)
                             }
@@ -313,11 +351,12 @@ async function getBooksPerPage(username: string, page: number): Promise<Book[]> 
                             
                             const book : Book = {
                                 title: $(elements[j]).find('.title').find('.value').text().trim(),
-                                userRating: $(elements[j]).find('.rating').find('.value').text().trim(),
+                                userRating: userRatingNum,
                                 bookTotalRating: $(elements[j]).find('.num_ratings').find('.value').text().trim(),
                                 bookAvgRating: $(elements[j]).find('.avg_rating').find('.value').text().trim(),
                                 author: $(elements[j]).find('.author').find('a').text().trim(),
-                                genres: bookGenre
+                                genres: bookGenre,
+                                alreadyRead: false
                             }
                             books.push(book)
                         }
@@ -332,7 +371,7 @@ async function getBooksPerPage(username: string, page: number): Promise<Book[]> 
 }
 
 // function for getting the top genre of a user
-async function getTopGenre(books: Book[]): Promise<string> {
+function getTopGenre(books: Book[]): string[] {
     
     // initialize an object 
     const genreCounts: {[key: string]: number} = {};
@@ -354,57 +393,59 @@ async function getTopGenre(books: Book[]): Promise<string> {
     });
 
     // convert object to an array of objects
-    const genreArr: GenreCount[] = Object.keys(genreCounts).map(name => ({
-        name,
+    const genreArr: TopGenres[] = Object.keys(genreCounts).map(name => ({
+        genreName: name,
         count: genreCounts[name],
     }));
 
     // sort the array based on count in descending order
-    genreArr.sort((a, b) => b.count - a.count);
+    genreArr.sort((a, b) => b.count - a.count)
 
-    // get the genre name with the most counts
-    const userTopGenre = genreArr[0].name
+    return genreArr.map((genre) => genre.genreName).slice(0,3)
 
-    return userTopGenre
+    // // get the genre name with the most counts
+    // const userTopGenre = genreArr[0].name
+
+    // return userTopGenre
 }
 
 // function to loop through an object to match the top genre of a user to a reading type
-function getReaderType(searchGenre: string, readerTypeArr: ReaderTypesObj): string | "" {
+// function getReaderType(searchGenre: string, readerTypeArr: ReaderTypesObj): string | "" {
 
-    for (const key in readerTypeArr) {
+//     for (const key in readerTypeArr) {
 
-        if (readerTypeArr.hasOwnProperty(key)) {
+//         if (readerTypeArr.hasOwnProperty(key)) {
 
-            const array = readerTypeArr[key];
+//             const array = readerTypeArr[key];
 
-            if (array.includes(searchGenre)) {
+//             if (array.includes(searchGenre)) {
             
-                if (key == "MindExpander"){
-                    return "Mind-Expander";
-                } else if (key == "FunLover"){
-                    return "Fun-Lover";
-                } else if (key == "NailBiter"){
-                    return "Nail-Biter";
-                } else {
-                    return key;
-                }
-            }
-        }
-    }
-    return "No Type Found"
-}
+//                 if (key == "MindExpander"){
+//                     return "Mind-Expander";
+//                 } else if (key == "FunLover"){
+//                     return "Fun-Lover";
+//                 } else if (key == "NailBiter"){
+//                     return "Nail-Biter";
+//                 } else {
+//                     return key;
+//                 }
+//             }
+//         }
+//     }
+//     return "No Type Found"
+// }
 
 // functin for getting the average ratings of books that the user read in the past year
-function getAvgRatings(books: Book[]): number {
+// function getAvgRatings(books: Book[]): number {
 
-    // use the reduce function to get the accumulation of the totalRating field in Book (the 10 means the input string should be parsed as a base-10 (decimal) number)
-    const totalRatingsOfBooks = books.reduce((sum, book) => sum + parseFloat(book.bookTotalRating.replace(/,/g, '')), 0);
+//     // use the reduce function to get the accumulation of the totalRating field in Book (the 10 means the input string should be parsed as a base-10 (decimal) number)
+//     const totalRatingsOfBooks = books.reduce((sum, book) => sum + parseFloat(book.bookTotalRating.replace(/,/g, '')), 0);
 
-    // divide by the total length of books found
-    const avgRatings = totalRatingsOfBooks / books.length
+//     // divide by the total length of books found
+//     const avgRatings = totalRatingsOfBooks / books.length
 
-    return avgRatings
-}
+//     return avgRatings
+// }
 
 // function to get the user's profile name
 async function getUserInfo(username: string): Promise<string>  {
@@ -440,30 +481,36 @@ async function getUserInfo(username: string): Promise<string>  {
 }
 
 // get the description based on the reader type
-function getTypeDesc(type: string): string {
+// function getTypeDesc(type: string): string {
 
-    const typeDescriptions: { [key: string]: string} = {
-        'Aesthete': "Your eye for greatness extends beyond the written word. You can find beautiful prose in anything creative, and can see things differently than those around you.",
-        'Protagonist': "You have a unique ability to imagine yourself in the shoes of the main character. You love to use that ability to explore different worlds and dream about amazing things.",
-        'Romantic': "You know how to show those around you how much you love them. You take the beauty of the relationships you read and put that into your own relationships, making them stronger.",
-        'Fun-Lover': "You know that books aren't only meant to make you cry - they can also be insight into how to make life better and more enjoyable. You have a talent for bringing the beauty of written word and fun together.",
-        'Nail-Biter': "Just because something is done with written word doesn't mean it is always spelled out for you. You have a unique mind for deciphering and discovering things that others inherently don't or can't.",
-        'Logophile': "You have a love for words unlike anyone else. You value prose so much in your reading habits, and it can heavily skew your opinion on a book overall, and it's why people trust your reading opinions most.",
-        'Mind-Expander': "Everything you touch gets better, and that is learned through the words you read on the page. You love discovering new things and gaining insight into worlds unknown before.",
-    };
+//     const typeDescriptions: { [key: string]: string} = {
+//         'Aesthete': "Your eye for greatness extends beyond the written word. You can find beautiful prose in anything creative, and can see things differently than those around you.",
+//         'Protagonist': "You have a unique ability to imagine yourself in the shoes of the main character. You love to use that ability to explore different worlds and dream about amazing things.",
+//         'Romantic': "You know how to show those around you how much you love them. You take the beauty of the relationships you read and put that into your own relationships, making them stronger.",
+//         'Fun-Lover': "You know that books aren't only meant to make you cry - they can also be insight into how to make life better and more enjoyable. You have a talent for bringing the beauty of written word and fun together.",
+//         'Nail-Biter': "Just because something is done with written word doesn't mean it is always spelled out for you. You have a unique mind for deciphering and discovering things that others inherently don't or can't.",
+//         'Logophile': "You have a love for words unlike anyone else. You value prose so much in your reading habits, and it can heavily skew your opinion on a book overall, and it's why people trust your reading opinions most.",
+//         'Mind-Expander': "Everything you touch gets better, and that is learned through the words you read on the page. You love discovering new things and gaining insight into worlds unknown before.",
+//     };
 
-    // Return the description if it exists, otherwise an empty string
-    return typeDescriptions[type] || "";
+//     // Return the description if it exists, otherwise an empty string
+//     return typeDescriptions[type] || "";
 
-}
+// }
 
 // function to export
 export async function GET(request: NextRequest) {
     
     // get the username from the url
     const username = request.nextUrl.searchParams.get("username");
+    const displayName = request.nextUrl.searchParams.get("displayName");
+    const fontColor = request.nextUrl.searchParams.get("fontColor");
+    const background = request.nextUrl.searchParams.get("background");
+
+    //console.log(displayName, fontColor, background)
     
     try {
+
 
         // get the user's profile name
         const userInfo = await getUserInfo(username as string);
@@ -492,47 +539,57 @@ export async function GET(request: NextRequest) {
         // return top authors
         const topAuthorsRead = getTopAuthors(totalBooks)
         
+        // return top 5 books from user
+        const topFiveBooks = getTopBooks(totalBooks)
 
         // return total read books for the user
-        const topGenre = await getTopGenre(totalBooks)
+        const topGenre = getTopGenre(totalBooks)
 
         // get the count of books the user read over the past year
         const totalYTDBooks = totalBooks.length
 
+        console.log(totalBooks)
+
         // return the user's type based on their most popular genre
-        const userType = getReaderType(topGenre, readerTypes)
+        //const userType = getReaderType(topGenre, readerTypes)
 
         // return the average ratings of books the user read in the last year
-        const avgRatingForUser = getAvgRatings(totalBooks)
+        //const avgRatingForUser = getAvgRatings(totalBooks)
 
-        // get the first word 
-        let firstWordType: string = ""
-        let firstWordDesc: string = ""
+        // // get the first word 
+        // let firstWordType: string = ""
+        // let firstWordDesc: string = ""
 
-        // anything less than 100,000 ratings is considered "Underground"
-        if (avgRatingForUser < 600000)
-        {
-            firstWordType = "Underground"
-            firstWordDesc = "You know how to find a lost book in a crowded library. You pay less attention to hype and more attention to whether it has captivated you at first glance."
+        // // anything less than 100,000 ratings is considered "Underground"
+        // if (avgRatingForUser < 600000)
+        // {
+        //     firstWordType = "Underground"
+        //     firstWordDesc = "You know how to find a lost book in a crowded library. You pay less attention to hype and more attention to whether it has captivated you at first glance."
 
-        } else {
+        // } else {
 
-            firstWordType = "Vogue"
-            firstWordDesc = "You are the most trusting type of reader. Your sixth sense is knowing when a new and amazing book is on the rise. Discussing, sharing, and trading thoughts with others is the best part about reading."
+        //     firstWordType = "Vogue"
+        //     firstWordDesc = "You are the most trusting type of reader. Your sixth sense is knowing when a new and amazing book is on the rise. Discussing, sharing, and trading thoughts with others is the best part about reading."
 
-        }
+        // }
 
-        const secondWordDesc = getTypeDesc(userType || "")
+        // const secondWordDesc = getTypeDesc(userType || "")
 
         const resultInfo: ResultInfo = {
             username: userInfo,
             totalBooks: totalYTDBooks,
-            firstWord: firstWordType,
-            secondWord: userType,
-            avgRatings: avgRatingForUser,
-            topGenreRead: topGenre,
-            firstDesc: firstWordDesc,
-            secondDesc: secondWordDesc
+            topAuthors: topAuthorsRead.map((author) => author.author),
+            topBooks: topFiveBooks.map((book) => book.title),
+            topGenres: topGenre,
+            displayName: displayName ? displayName: userInfo,
+            fontColor: fontColor ? fontColor: "",
+            background: background ? background: ""
+            // firstWord: firstWordType,
+            // secondWord: userType,
+            // avgRatings: avgRatingForUser,
+            // topGenreRead: topGenre,
+            // firstDesc: firstWordDesc,
+            // secondDesc: secondWordDesc
         }
 
         return NextResponse.json(resultInfo)

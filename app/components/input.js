@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Center, Box, RadioCard, Span, Input, Button, Field, Text, HStack, FieldHelperText } from "@chakra-ui/react";
 import { ProgressCircle } from "@chakra-ui/react";
 import html2canvas from "html2canvas";
+import Result from '../result/page';
 
 
   // define colors for background and text
@@ -21,16 +22,21 @@ import html2canvas from "html2canvas";
     { value : "#3a6f73"},
   ]
 
+  
 
 export default function InputProfile() {
   // define useStates
   const [pageInfo, setPageInfo] = useState(null)
-  const [displayName, setDisplayName] = useState('')
+  const [displayName, setDisplayName] = useState(null)
+  const [fontColor, setFontColor] = useState(null)
+  const [background, setBackground] = useState(null)
   const [profileLink, setProfileLink] = useState('')
   const [loading, setLoading] = useState(false)
   const [currentDate, setCurrentDate] = useState('')
   const [showButton, setShowButton] = useState(false)
   const [showSubmitButton, setShowSubmitButton] = useState(true);
+
+  
 
   // get the profile link from the input
   const handleInputChange = (e) => {
@@ -41,6 +47,15 @@ export default function InputProfile() {
     setDisplayName(e.target.value)
   };
 
+  const getFontColor = (e) => {
+    setFontColor(e.value)
+  }
+
+  const getBackgroundColor = (e) => {
+    setBackground(e.value)
+  }
+
+
   // validate the url that the user inputted
   const isUrlValid = () => {
     //const urlRegex = /^https:\/\/www\.goodreads\.com\/user\/show\/\d+$/;
@@ -50,8 +65,16 @@ export default function InputProfile() {
 
   };
 
+  // validate form 
+  const validateForm = () => {
+    // if any of the form elements are empty, return false
+    if (displayName == null || fontColor == null || background == null) {
+      return false
+    }
+    return true
+  }
 
-  // get the current date in specific format (ex: 15 January 2024) (this is for the output png result)
+
   useEffect(() => {
     const currentDateObj = new Date();
     const day = currentDateObj.getDate();
@@ -59,31 +82,29 @@ export default function InputProfile() {
     const year = currentDateObj.getFullYear();
     const formattedDate = `${day} ${month} ${year}`
     setCurrentDate(formattedDate)
+
+    const controller =  new AbortController()
+    
+    getReadReceipt().catch((error) => {
+      return () => {
+        controller.abort()
+      }
+    })
+    
   }, [])
-  
-  // make the api call to web scrape goodreads
-  const handleSubmit = async (e) => {
 
-    e.preventDefault();
-    setLoading(true) // show the loading icon
-    setShowSubmitButton(false)
-    setShowButton(false) // hide the download png result button
+  async function getReadReceipt() {
 
-    // // initialize username string
-    // let username = ''
-
-    // check for if the IsUrlValid function returned true to run api call
-    if (isUrlValid){
-
-      // get the user id from the valid url
-      //const username = profileLink.match([/\/user\/show\/([^/]+)/])[1];
+      // get the username from the profile link provided
       const username = profileLink.match(/(?!.*\/).+/)[0]
-  
       try {
         // start api call 
         const response = await axios.get('/api/scrapeBooks', {
           params: {
             username: username,
+            displayName: displayName,
+            fontColor: fontColor,
+            background: background
           },
         });
         
@@ -97,14 +118,71 @@ export default function InputProfile() {
         setShowButton(true)
   
       } catch (error) {
-        alert('Error fetching your data. Please try again.')
-        //console.log("Something went wrong", error);
+        alert(error)
         setLoading(false);
       }
-    } 
+  }
+
+  
+  // make the api call to web scrape goodreads
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true) // show the loading icon
+    setShowSubmitButton(false) // hide the submit button
+    setShowButton(false) // hide the download png result button
+    if (validateForm() && isUrlValid()) {
+      getReadReceipt() // api call
+    } else {
+      // alert user when form is incomplete
+      setLoading(false)
+      alert("Invalid form! Please double check your profile link and make sure all fields are provided")
+      setShowSubmitButton(true)
+    }
+
+    // // check for if the IsUrlValid function returned true to run api call
+    // if (isUrlValid) {
+      
+    //   // check if all other form elements are filled
+      
+    //   if (!validateForm()) {
+        
+    //     alert('All fields are required')
+    //     return
+    //   }
+    //   // get the user id from the valid url
+    //   //const username = profileLink.match([/\/user\/show\/([^/]+)/])[1];
+    //   const username = profileLink.match(/(?!.*\/).+/)[0]
+  
+    //   try {
+    //     // start api call 
+    //     const response = await axios.get('/api/scrapeBooks', {
+    //       params: {
+    //         username: username,
+    //         displayName: displayName,
+    //         fontColor: fontColor,
+    //         background: background
+    //       },
+    //     });
+        
+    //     // on a successful return, remove the loading icon
+    //     setLoading(false)
+        
+    //     // populate the result png template with data
+    //     setPageInfo(response.data)
+        
+    //     // show the button to download png result
+    //     setShowButton(true)
+  
+    //   } catch (error) {
+    //     alert('Error fetching your data. Please try again.')
+    //     //console.log("Something went wrong", error);
+    //     setLoading(false);
+    //   }
+    // } 
     
   }
 
+  // function for converting html into a pdf for final result
   const handleDownloadImage = () => {
     const resultDiv = document.getElementById('result');
 
@@ -132,7 +210,7 @@ export default function InputProfile() {
         // Create a link element to trigger the download
         const downloadLink = document.createElement('a');
         downloadLink.href = imageDataURL;
-        downloadLink.download = `${pageInfo.username}_ReadReceipt.png`;
+        downloadLink.download = `ReadReceipt_${pageInfo.displayName}.png`;
         downloadLink.click();
 
         // Revert the styles to their original values
@@ -171,7 +249,7 @@ export default function InputProfile() {
           </Field.Label>
           <Input onChange={getDisplayName} bg="customBlue" p="8px" />
         </Field.Root>
-        <RadioCard.Root  my="1rem">
+        <RadioCard.Root onValueChange={getBackgroundColor}  my="1rem">
           <RadioCard.Label>Pick a background color:</RadioCard.Label>
           <HStack align="stretch">
             {backgroundColors.map((item) => (
@@ -182,7 +260,7 @@ export default function InputProfile() {
             ))}
           </HStack>
         </RadioCard.Root>
-        <RadioCard.Root  my="1rem">
+        <RadioCard.Root onValueChange={getFontColor}  my="1rem">
           <RadioCard.Label>Pick a font color:</RadioCard.Label>
           <HStack align="stretch">
             {fontColors.map((item) => (
@@ -205,7 +283,7 @@ export default function InputProfile() {
         <Center>
           {showSubmitButton ? (
             <Button my="1.5rem" p="8px" id="submitBtn" onClick={handleSubmit} bg='customBlue' color='offWhite' disabled={!isUrlValid()}> 
-              Get Reading Wrapped
+              Get Read Receipt
             </Button>
           ): <Box></Box>}
         </Center>
@@ -218,53 +296,7 @@ export default function InputProfile() {
       </Center>
 
       {pageInfo ? (
-        
-        <Box fontFamily='Noto Serif, serif' className="result" id="result" display='none' >
-
-          <Box textAlign='right' pr='5rem'>
-            <Text fontSize='49px'>{pageInfo.username}&apos;s Read Receipt</Text>
-            <Text mt='-0.5rem' fontSize='30px'>{currentDate}</Text>
-          </Box>
-
-          <Center mt='8rem'>
-            <Text fontSize='40px'>Based on {pageInfo.totalBooks} books for the past year, you are the</Text>
-          </Center>
-
-          <Center>
-            <Text fontSize='120px'>{pageInfo.firstWord}</Text>
-          </Center>
-
-          <Center mt='-4.5rem'>
-            <Text fontSize='120px'>{pageInfo.secondWord}</Text>
-          </Center>
-
-          <Box width='100%' mt='8rem'>
-            <Box textAlign='center' ml='600px'>
-              <Text fontSize='30px'>Average popularity of books read:</Text>
-              <Text mt='-1rem' fontSize='50px'>{Math.round(pageInfo.avgRatings).toLocaleString()} ratings</Text>
-            </Box>
-          </Box>
-
-          <Box width='100%'>
-            <Box textAlign='center' mr='650px'>
-              <Text textAlign='center' fontSize='30px'>Most read genre:</Text>
-              <Text mt='-1.5rem' textAlign='center' fontSize='50px'>{pageInfo.topGenreRead}</Text>
-            </Box>
-          </Box>
-
-          <Center mt='30rem'>
-            <Text lineHeight='1' width='80%' textAlign='center' fontSize='35px'>{pageInfo.firstDesc}</Text>
-          </Center>
-          
-          <Center mt='2rem'>
-            <Text lineHeight='1' width='80%' textAlign='center' fontSize='35px'>{pageInfo.secondDesc}</Text>
-          </Center>
-
-          <Center className="url" fontSize='25px' mt='8rem'>
-            <Text >read-receipts.com</Text>
-          </Center>
-
-        </Box>
+        <Result resultInfo={pageInfo}></Result>
       ) : (
         <Box></Box>
       )}
