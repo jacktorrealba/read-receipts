@@ -4,7 +4,6 @@ export default function Title(){
   
   return (
     <>
-    
       <Box id="titleBox" display='flex' alignItems='center' justifyContent='center'   mt='10rem'>
         <Text className="title" >
           Read

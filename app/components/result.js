@@ -1,11 +1,11 @@
 'use client'
-import { ChakraProvider, Center, Box, Text } from "@chakra-ui/react"
-import Link from "next/link"
+import { Center, Box, Text } from "@chakra-ui/react"
+
 
 export default function ResultPage() {
     return (
         <>
-        <ChakraProvider>
+
             <Box className="result" id="result" display='none' >
 
                 <Box textAlign='right' pr='5rem'>
@@ -48,7 +48,7 @@ export default function ResultPage() {
                 </Center>
 
             </Box>
-        </ChakraProvider>
+
         </>
     )
 }
