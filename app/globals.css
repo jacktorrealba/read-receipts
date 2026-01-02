@@ -10,6 +10,7 @@
   --yellow: #ffcd34;
   --text-font-family: 'Karla', sans-serif;
   --heading-font-family: 'Baskervville', serif;
+  --result-font : 'Livvic', sans-serif;
 }
 
 *,
@@ -79,7 +80,7 @@ body {
 }
 
 .result-title {
-  font-family: "Livvic", sans-serif;
+  font-family: "Roboto", sans-serif;
   line-height: 100%;
   margin: 0 4rem 0 0;
   font-weight: bolder;
@@ -88,7 +89,7 @@ body {
 }
 
 .result-category {
-  font-family: "Livvic", sans-serif;
+  font-family: "Roboto", sans-serif;
   font-size: 27px;
   font-weight: bold;
   padding: 10px;
@@ -97,7 +98,7 @@ body {
 }
 
 .results-list {
-  font-family: "Livvic", sans-serif;
+  font-family: "Roboto", sans-serif;
   font-size: 40px;
   font-weight: bold;
   padding: 10px;

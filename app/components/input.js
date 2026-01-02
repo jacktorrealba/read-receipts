@@ -290,7 +290,7 @@ export default function InputProfile() {
       {loading ? <LoadingIcon isLoading={true}/> : <Box></Box>}
 
       <Center id="downloadBtnBox" mt='2rem'>
-        {showButton ? <Button my="1.5rem" p="8px" w="25%" bg="customYellow" onClick={handleDownloadImage}>Download PNG</Button>: null}
+        {showButton ? <Button my="1.5rem" p="8px" bg="customYellow" onClick={handleDownloadImage}>Download PNG</Button>: null}
       </Center>
 
       {pageInfo ? (

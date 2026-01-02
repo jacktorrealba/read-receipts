@@ -1,5 +1,6 @@
 
 import { Box, Heading, Span, Text, Flex } from "@chakra-ui/react"
+//import { fontFamily } from "html2canvas/dist/types/css/property-descriptors/font-family"
 
 
 export default function Result({resultInfo}) {
@@ -16,8 +17,8 @@ export default function Result({resultInfo}) {
     const backgroundImage = `url("/resultTemplates/${backgroundAsString}")`
 
     const styleResultTitle = {
-        fontFamily: "Livvic, sans serif",
         //lineHeight: "100%",
+        fontFamily: "var(--result-font)",
         margin: "0 4rem 0 0",
         fontWeight: "bolder",
         //padding: "10px",
@@ -26,7 +27,7 @@ export default function Result({resultInfo}) {
     }
 
     const styleResultList = {
-        fontFamily: "Livvic, sans-serif",
+        fontFamily: "var(--result-font)",
         fontSize: "54px",
         fontWeight: "bold",
         //padding: "10px",
@@ -38,7 +39,7 @@ export default function Result({resultInfo}) {
     }
 
     const styleResultCategory = {
-        fontFamily: "Livvic, sans-serif",
+        fontFamily: "var(--result-font)",
         fontSize: "36px",
         fontWeight: "bold",
         //padding: "10px",
@@ -128,13 +129,13 @@ export default function Result({resultInfo}) {
                     </Heading>
                     <Flex justifyContent="space-between" alignItems="center">
                         <Heading style={styleResultCategory}>
-                            BOOKS READ: <Span color={resultInfo.fontColor} fontFamily="Livvic" fontSize="64px">{resultInfo.totalBooks}</Span>
+                            BOOKS READ: <Span color={resultInfo.fontColor} fontSize="64px">{resultInfo.totalBooks}</Span>
                         </Heading>
-                        <Heading textAlign="end" fontSize="42px" color={resultInfo.fontColor} mr="4rem" fontFamily="Livvic" fontWeight="bold">yourreadreceipt.vercel.app</Heading>
+                        <Heading textAlign="end" fontSize="42px" color={resultInfo.fontColor} mr="4rem" fontFamily="var(--result-font)"  fontWeight="bold">yourreadreceipt.vercel.app</Heading>
                     </Flex>
                 </Box>
                 {/* <Box width="100%" mx="auto" mt="4rem" mb="0.5rem">
-                    <Heading textAlign="end" fontSize="42px" color={resultInfo.fontColor} mr="4rem" fontFamily="Livvic" fontWeight="bold">readreceipts.vercel.app</Heading>
+                    <Heading textAlign="end" fontSize="42px" color={resultInfo.fontColor} mr="4rem" fontFamily="Roboto" fontWeight="bold">readreceipts.vercel.app</Heading>
                 </Box> */}
             </Box>
         </>
