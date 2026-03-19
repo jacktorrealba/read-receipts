@@ -3,7 +3,7 @@ https://read-receipts-six.vercel.app/
 
 ## What is Read-Receipts?
 
-Read-Receipts is a website built to web scrapev your [Goodreads](https://www.goodreads.com/) account for the last 12 months of user and book data in order to output a persona classification based on your reading habits.
+Read-Receipts is a website built to web scrape your [Goodreads](https://www.goodreads.com/) account for the last 12 months of user and book data in order to output a persona classification based on your reading habits.
 
 ## Instructions 
 
